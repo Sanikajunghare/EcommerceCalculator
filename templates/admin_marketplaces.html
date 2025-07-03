@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Marketplaces</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+  <h2 class="mb-4">Manage Marketplaces</h2>
+
+  <form method="POST" action="/admin/marketplaces/add" class="row g-2 mb-4">
+    <div class="col-auto">
+      <input name="name" type="text" class="form-control" placeholder="Enter Marketplace Name" required>
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary">Add Marketplace</button>
+    </div>
+  </form>
+
+  <table class="table table-bordered">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for mp in marketplaces %}
+      <tr>
+        <td>{{ mp.id }}</td>
+        <td>{{ mp.name }}</td>
+        <td><a href="/admin/marketplaces/delete/{{ mp.id }}" class="btn btn-sm btn-danger">Delete</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <a href="/" class="btn btn-secondary mt-3">Back to Calculator</a>
+</div>
+
+</body>
+</html>

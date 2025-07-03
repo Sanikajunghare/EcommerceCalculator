@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #fdfcfa;
+    }
+    .card {
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      border-radius: 1rem;
+      background-color: #fefefe;
+      border: none;
+    }
+    .card-header {
+      background-color: #e8f0f8;
+      color: #333;
+    }
+    .btn-primary {
+      background-color: #a3c4f3;
+      border: none;
+    }
+    .btn-primary:hover {
+      background-color: #90b4e6;
+    }
+    .btn-danger {
+      background-color: #f7a1a1;
+      border: none;
+    }
+    .btn-danger:hover {
+      background-color: #f28f8f;
+    }
+    .table-primary {
+      background-color: #d6e6fa;
+    }
+    .navbar {
+      background-color: #c8d6e5;
+    }
+    .navbar-brand {
+      color: #2f3640 !important;
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Admin Dashboard</a>
+  </div>
+</nav>
+
+<div class="container mb-4">
+  <!-- Commission Rule Form -->
+  <div class="card mb-4">
+    <div class="card-header fw-bold">Add Commission Rule</div>
+    <div class="card-body">
+      <form action="/admin/add_rule" method="POST" class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Category</label>
+          <select name="category_id" id="category-select" class="form-select" required>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Subcategory</label>
+          <select name="subcategory_id" id="subcategory-select" class="form-select" required>
+            <option disabled selected>Select a subcategory</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Marketplace</label>
+          <select name="marketplace_id" class="form-select" required>
+            {% for mp in marketplaces %}
+            <option value="{{ mp.id }}">{{ mp.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Min Price</label>
+          <input type="number" name="min_price" step="0.01" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Max Price</label>
+          <input type="number" name="max_price" step="0.01" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Commission %</label>
+          <input type="number" name="commission_percent" step="0.01" class="form-control" required>
+        </div>
+        <div class="col-md-3 d-grid align-items-end">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Add Rule</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Commission Rules Table -->
+  <div class="card mb-4">
+    <div class="card-header fw-bold">Commission Rules List</div>
+    <div class="card-body">
+      <table class="table table-bordered table-striped table-hover">
+        <thead class="table-primary">
+          <tr>
+            <th>ID</th>
+            <th>Category</th>
+            <th>Subcategory</th>
+            <th>Marketplace</th>
+            <th>Min Price</th>
+            <th>Max Price</th>
+            <th>Commission %</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for rule in rules %}
+          <tr>
+            <td>{{ rule.id }}</td>
+            <td>{{ rule.category.name }}</td>
+            <td>{{ rule.subcategory.name }}</td>
+            <td>{{ rule.marketplace.name }}</td>
+            <td>{{ rule.min_price }}</td>
+            <td>{{ rule.max_price }}</td>
+            <td>{{ rule.commission_percent }}</td>
+            <td>
+              <a href="{{ url_for('edit_rule', rule_id=rule.id) }}" class="btn btn-warning btn-sm"><i class="bi bi-pencil"></i></a>
+              <a href="{{ url_for('delete_rule', rule_id=rule.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')"><i class="bi bi-trash"></i></a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row g-4">
+    <!-- Manage Categories -->
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-header fw-bold">Manage Categories</div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('add_category') }}" class="input-group mb-2">
+            <input type="text" name="category_name" class="form-control" placeholder="New Category" required>
+            <button class="btn btn-primary"><i class="bi bi-plus-circle"></i></button>
+          </form>
+          {% for cat in categories %}
+          <div class="d-flex justify-content-between align-items-center border p-2 mb-1 rounded">
+            <span>{{ cat.name }}</span>
+            <a href="{{ url_for('delete_category', category_id=cat.id) }}" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Manage Subcategories -->
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-header fw-bold">Manage Subcategories</div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('add_subcategory') }}" class="row g-1 mb-2">
+            <div class="col-7">
+              <input type="text" name="subcategory_name" class="form-control" placeholder="SubCategory" required>
+            </div>
+            <div class="col-3">
+              <select name="subcategory_category" class="form-select" required>
+                {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-2">
+              <button class="btn btn-primary w-100"><i class="bi bi-plus-circle"></i></button>
+            </div>
+          </form>
+          {% for sub in subcategories %}
+          <div class="d-flex justify-content-between align-items-center border p-2 mb-1 rounded">
+            <span>{{ sub.name }} ({{ sub.category.name }})</span>
+            <a href="{{ url_for('delete_subcategory', subcategory_id=sub.id) }}" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Manage Marketplaces -->
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-header fw-bold">Manage Marketplaces</div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('add_marketplace') }}" class="input-group mb-2">
+            <input type="text" name="marketplace_name" class="form-control" placeholder="New Marketplace" required>
+            <button class="btn btn-primary"><i class="bi bi-plus-circle"></i></button>
+          </form>
+          {% for mp in marketplaces %}
+          <div class="d-flex justify-content-between align-items-center border p-2 mb-1 rounded">
+            <span>{{ mp.name }}</span>
+            <a href="{{ url_for('delete_marketplace', marketplace_id=mp.id) }}" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Manage Courier Charges -->
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-header fw-bold">Manage Courier Charges</div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('add_courier_charge') }}" class="row g-1 mb-3">
+            <div class="col-6">
+              <input type="text" name="weight_slab" class="form-control" placeholder="Weight (kg)" required>
+            </div>
+            <div class="col-4">
+              <input type="number" name="charge" class="form-control" placeholder="Charge ₹" required>
+            </div>
+            <div class="col-2">
+              <button class="btn btn-primary w-100"><i class="bi bi-plus-circle"></i></button>
+            </div>
+          </form>
+          <table class="table table-sm">
+            <thead>
+              <tr><th>Weight</th><th>Charge</th><th></th></tr>
+            </thead>
+            <tbody>
+              {% for charge in courier_charges %}
+              <tr>
+                <td>{{ charge.weight_slab }}</td>
+                <td>₹{{ charge.charge }}</td>
+                <td>
+                  <a href="{{ url_for('delete_courier_charge', charge_id=charge.id) }}" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dependent dropdown script -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const categorySelect = document.getElementById("category-select");
+    const subcategorySelect = document.getElementById("subcategory-select");
+
+    categorySelect.addEventListener("change", function () {
+      const selectedCategoryId = this.value;
+      fetch(`/admin/subcategories/${selectedCategoryId}`)
+        .then(response => response.json())
+        .then(data => {
+          subcategorySelect.innerHTML = '<option disabled selected>Select a subcategory</option>';
+          data.forEach(sub => {
+            const option = document.createElement("option");
+            option.value = sub.id;
+            option.textContent = sub.name;
+            subcategorySelect.appendChild(option);
+          });
+        });
+    });
+  });
+</script>
+
+</body>
+</html>
