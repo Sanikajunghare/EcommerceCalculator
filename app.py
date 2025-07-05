@@ -192,6 +192,36 @@ def delete_rule(rule_id):
     db.session.commit()
     return redirect(url_for('admin_panel'))
 
+@app.route('/add_category', methods=['POST'])
+def add_category():
+    name = request.form['category_name']
+    if name:
+        existing = Category.query.filter_by(name=name).first()
+        if not existing:
+            new_cat = Category(name=name)
+            db.session.add(new_cat)
+            db.session.commit()
+    return redirect(url_for('admin_panel'))
+@app.route('/add_subcategory', methods=['POST'])
+def add_subcategory():
+    name = request.form['subcategory_name']
+    category_id = request.form['subcategory_category_id']
+    if name and category_id:
+        new_subcat = SubCategory(name=name, category_id=category_id)
+        db.session.add(new_subcat)
+        db.session.commit()
+    return redirect(url_for('admin_panel'))
+
+@app.route('/add_marketplace', methods=['POST'])
+def add_marketplace():
+    name = request.form['marketplace_name']
+    if name:
+        existing = Marketplace.query.filter_by(name=name).first()
+        if not existing:
+            new_market = Marketplace(name=name)
+            db.session.add(new_market)
+            db.session.commit()
+    return redirect(url_for('admin_panel'))
 
 
 if __name__ == '__main__':
