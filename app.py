@@ -167,6 +167,25 @@ def admin_panel():
                            marketplaces=marketplaces,
                            courier_charges=courier_charges,
                            rules=rules)
+@app.route('/edit_rule/<int:rule_id>', methods=['GET', 'POST'])
+def edit_rule(rule_id):
+    rule = CommissionRule.query.get_or_404(rule_id)
+    categories = Category.query.all()
+    subcategories = SubCategory.query.filter_by(category_id=rule.category_id).all()
+    marketplaces = Marketplace.query.all()
+
+    if request.method == 'POST':
+        rule.category_id = request.form['category']
+        rule.subcategory_id = request.form['subcategory']
+        rule.marketplace_id = request.form['marketplace']
+        rule.min_price = float(request.form['min_price'])
+        rule.max_price = float(request.form['max_price'])
+        rule.commission_percent = float(request.form['commission_percent'])
+        db.session.commit()
+        return redirect(url_for('admin_panel'))
+
+    return render_template('edit_rule.html', rule=rule, categories=categories, subcategories=subcategories, marketplaces=marketplaces)
+
 
 
 if __name__ == '__main__':
