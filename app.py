@@ -156,4 +156,6 @@ def get_subcategories(category_id):
     return jsonify([{'id': s.id, 'name': s.name} for s in subcategories])
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    from waitress import serve
+    serve(app, host='0.0.0.0', port=8080)
+
