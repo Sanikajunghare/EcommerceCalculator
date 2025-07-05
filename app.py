@@ -103,53 +103,6 @@ def calculate():
 
     return render_template('index.html', result=result, categories=categories, subcategories=subcategories, marketplaces=marketplaces)
 
-
-
-    commission_rule = CommissionRule.query.filter(
-        CommissionRule.category_id == int(request.form['category']),
-        CommissionRule.subcategory_id == int(request.form['subcategory']),
-        CommissionRule.marketplace_id == int(request.form['marketplace']),
-        CommissionRule.min_price <= selling_price,
-        CommissionRule.max_price >= selling_price
-    ).first()
-
-    if commission_rule:
-        commission_rate = commission_rule.commission_percent
-
-    commission = selling_price * commission_rate / 100
-    commission_gst = commission * 0.18
-    fixed_fee_gst = fixed_fee * 0.18
-    shipping_weight = max(weight, vol_weight)
-    shipping_charge = shipping_rate_per_kg * shipping_weight
-    courier_gst = shipping_charge * 0.18
-
-    total_deductions = commission + fixed_fee + shipping_charge
-    total_gst = commission_gst + fixed_fee_gst + courier_gst
-    receivable = selling_price - (total_deductions + total_gst)
-    profit = receivable - cost
-
-    result = {
-        'mrp': round(mrp, 2),
-        'discount': round(discount, 2),
-        'selling_price': round(selling_price),
-        'commission': round(commission, 2),
-        'commission_gst': round(commission_gst, 2),
-        'fixed_fee': round(fixed_fee, 2),
-        'fixed_fee_gst': round(fixed_fee_gst, 2),
-        'shipping_weight': round(shipping_weight, 2),
-        'shipping_charge': round(shipping_charge, 2),
-        'courier_gst': round(courier_gst, 2),
-        'total_deductions': round(total_deductions + total_gst, 2),
-        'receivable': round(receivable, 2),
-        'profit': round(profit, 2)
-    }
-
-    categories = Category.query.all()
-    subcategories = SubCategory.query.all()
-    marketplaces = Marketplace.query.all()
-
-    return render_template('index.html', result=result, categories=categories, subcategories=subcategories, marketplaces=marketplaces)
-
 @app.route('/admin/subcategories/<int:category_id>')
 def get_subcategories(category_id):
     subcategories = SubCategory.query.filter_by(category_id=category_id).all()
@@ -221,6 +174,34 @@ def add_marketplace():
             new_market = Marketplace(name=name)
             db.session.add(new_market)
             db.session.commit()
+    return redirect(url_for('admin_panel'))
+@app.route('/delete_category/<int:category_id>', methods=['POST', 'GET'])
+def delete_category(category_id):
+    category = Category.query.get_or_404(category_id)
+
+    # Optional: Delete associated subcategories too
+    SubCategory.query.filter_by(category_id=category_id).delete()
+
+    db.session.delete(category)
+    db.session.commit()
+    return redirect(url_for('admin_panel'))
+@app.route('/delete_subcategory/<int:subcategory_id>', methods=['POST', 'GET'])
+def delete_subcategory(subcategory_id):
+    subcategory = SubCategory.query.get_or_404(subcategory_id)
+    db.session.delete(subcategory)
+    db.session.commit()
+    return redirect(url_for('admin_panel'))
+@app.route('/delete_marketplace/<int:marketplace_id>', methods=['POST', 'GET'])
+def delete_marketplace(marketplace_id):
+    market = Marketplace.query.get_or_404(marketplace_id)
+    db.session.delete(market)
+    db.session.commit()
+    return redirect(url_for('admin_panel'))
+@app.route('/delete_courier/<int:courier_id>', methods=['POST', 'GET'])
+def delete_courier(courier_id):
+    courier = CourierCharge.query.get_or_404(courier_id)
+    db.session.delete(courier)
+    db.session.commit()
     return redirect(url_for('admin_panel'))
 
 
