@@ -203,6 +203,10 @@ def delete_courier(courier_id):
     db.session.delete(courier)
     db.session.commit()
     return redirect(url_for('admin_panel'))
+@app.route('/insert_standard_charges')
+def insert_standard_charges():
+    # You can render a form or insert default courier/commission rules here
+    return "Standard charges inserted or placeholder page."
 
 
 if __name__ == '__main__':
