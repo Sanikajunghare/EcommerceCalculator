@@ -154,6 +154,20 @@ def calculate():
 def get_subcategories(category_id):
     subcategories = SubCategory.query.filter_by(category_id=category_id).all()
     return jsonify([{'id': s.id, 'name': s.name} for s in subcategories])
+@app.route('/admin_panel')
+def admin_panel():
+    categories = Category.query.all()
+    subcategories = SubCategory.query.all()
+    marketplaces = Marketplace.query.all()
+    courier_charges = CourierCharge.query.all()
+    rules = CommissionRule.query.all()
+    return render_template('admin_panel.html',
+                           categories=categories,
+                           subcategories=subcategories,
+                           marketplaces=marketplaces,
+                           courier_charges=courier_charges,
+                           rules=rules)
+
 
 if __name__ == '__main__':
     from waitress import serve
