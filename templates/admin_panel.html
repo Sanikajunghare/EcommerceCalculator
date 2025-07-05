@@ -257,7 +257,8 @@
             <td>{{ charge.weight_slab }}</td>
             <td>₹{{ charge.charge }}</td>
             <td>
-              <a href="{{ url_for('delete_courier_charge', charge_id=charge.id) }}" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+              <a href="{{ url_for('delete_courier', courier_id=charge.id) }}" class="btn btn-sm btn-danger">
+<i class="bi bi-trash"></i></a>
             </td>
           </tr>
           {% endfor %}
