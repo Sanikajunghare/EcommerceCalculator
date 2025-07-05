@@ -207,6 +207,17 @@ def delete_courier(courier_id):
 def insert_standard_charges():
     # You can render a form or insert default courier/commission rules here
     return "Standard charges inserted or placeholder page."
+@app.route('/add_courier_charge', methods=['POST'])
+def add_courier_charge():
+    weight_slab = request.form.get('weight_slab')
+    charge = request.form.get('charge')
+
+    if weight_slab and charge:
+        new_entry = CourierCharge(weight_slab=float(weight_slab), charge=float(charge))
+        db.session.add(new_entry)
+        db.session.commit()
+
+    return redirect(url_for('admin_panel'))
 
 
 if __name__ == '__main__':
