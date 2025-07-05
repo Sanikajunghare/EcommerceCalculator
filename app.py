@@ -185,6 +185,12 @@ def edit_rule(rule_id):
         return redirect(url_for('admin_panel'))
 
     return render_template('edit_rule.html', rule=rule, categories=categories, subcategories=subcategories, marketplaces=marketplaces)
+@app.route('/delete_rule/<int:rule_id>', methods=['POST', 'GET'])
+def delete_rule(rule_id):
+    rule = CommissionRule.query.get_or_404(rule_id)
+    db.session.delete(rule)
+    db.session.commit()
+    return redirect(url_for('admin_panel'))
 
 
 
