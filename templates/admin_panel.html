@@ -45,6 +45,19 @@
   </style>
 </head>
 <body>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="container mt-2">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
 <nav class="navbar navbar-expand-lg navbar-dark mb-4">
   <div class="container-fluid">
     <a class="navbar-brand" href="#">Admin Dashboard</a>
@@ -208,65 +221,80 @@
     </div>
 
     <!-- Manage Courier Charges -->
-    <div class="col-md-3">
-      <div class="card">
-        <div class="card-header fw-bold">Manage Courier Charges</div>
-        <div class="card-body">
-          <form method="POST" action="{{ url_for('add_courier_charge') }}" class="row g-1 mb-3">
-            <div class="col-6">
-              <input type="text" name="weight_slab" class="form-control" placeholder="Weight (kg)" required>
-            </div>
-            <div class="col-4">
-              <input type="number" name="charge" class="form-control" placeholder="Charge ₹" required>
-            </div>
-            <div class="col-2">
-              <button class="btn btn-primary w-100"><i class="bi bi-plus-circle"></i></button>
-            </div>
-          </form>
-          <table class="table table-sm">
-            <thead>
-              <tr><th>Weight</th><th>Charge</th><th></th></tr>
-            </thead>
-            <tbody>
-              {% for charge in courier_charges %}
-              <tr>
-                <td>{{ charge.weight_slab }}</td>
-                <td>₹{{ charge.charge }}</td>
-                <td>
-                  <a href="{{ url_for('delete_courier_charge', charge_id=charge.id) }}" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+<div class="col-md-3">
+  <div class="card">
+    <div class="card-header fw-bold">Manage Courier Charges</div>
+    <div class="card-body">
+
+      <!-- ✅ Button to insert standard charges -->
+      <div class="d-grid mb-3">
+        <a href="{{ url_for('insert_standard_charges') }}" class="btn btn-outline-primary">
+          <i class="bi bi-download"></i> Insert Standard Charges
+        </a>
       </div>
+
+      <!-- Courier charge form -->
+      <form method="POST" action="{{ url_for('add_courier_charge') }}" class="row g-1 mb-3">
+        <div class="col-6">
+          <input type="text" name="weight_slab" class="form-control" placeholder="Weight (kg)" required>
+        </div>
+        <div class="col-4">
+          <input type="number" name="charge" class="form-control" placeholder="Charge ₹" required>
+        </div>
+        <div class="col-2">
+          <button class="btn btn-primary w-100"><i class="bi bi-plus-circle"></i></button>
+        </div>
+      </form>
+
+      <!-- Courier charges table -->
+      <table class="table table-sm">
+        <thead>
+          <tr><th>Weight</th><th>Charge</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for charge in courier_charges %}
+          <tr>
+            <td>{{ charge.weight_slab }}</td>
+            <td>₹{{ charge.charge }}</td>
+            <td>
+              <a href="{{ url_for('delete_courier_charge', charge_id=charge.id) }}" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
     </div>
   </div>
 </div>
-
-<!-- Dependent dropdown script -->
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const categorySelect = document.getElementById("category-select");
-    const subcategorySelect = document.getElementById("subcategory-select");
+  document.addEventListener('DOMContentLoaded', function () {
+    const categorySelect = document.getElementById('category-select');
+    const subcategorySelect = document.getElementById('subcategory-select');
 
-    categorySelect.addEventListener("change", function () {
-      const selectedCategoryId = this.value;
-      fetch(`/admin/subcategories/${selectedCategoryId}`)
+    categorySelect.addEventListener('change', function () {
+      const categoryId = this.value;
+
+      fetch(`/admin/subcategories/${categoryId}`)
         .then(response => response.json())
         .then(data => {
           subcategorySelect.innerHTML = '<option disabled selected>Select a subcategory</option>';
           data.forEach(sub => {
-            const option = document.createElement("option");
+            const option = document.createElement('option');
             option.value = sub.id;
             option.textContent = sub.name;
             subcategorySelect.appendChild(option);
           });
         });
     });
+
+    // Trigger change on page load to populate if needed
+    if (categorySelect.value) {
+      categorySelect.dispatchEvent(new Event('change'));
+    }
   });
 </script>
+
 
 </body>
 </html>

@@ -1,9 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
-from models import db, Category, SubCategory, Marketplace, CommissionRule, CourierCharge  # ✅ Import added
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
+from models import db, Category, SubCategory, Marketplace, CommissionRule, CourierCharge
 import os
 
 app = Flask(__name__)
-
+app.secret_key = 'your-secret-key'
 
 # ---------- Database Setup ----------
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -19,23 +19,24 @@ def admin_home():
     categories = Category.query.all()
     subcategories = SubCategory.query.all()
     marketplaces = Marketplace.query.all()
-    courier_charges = CourierCharge.query.all()  # ✅ Include courier charges
+    courier_charges = CourierCharge.query.all()
     return render_template(
         'admin_panel.html',
         rules=rules,
         categories=categories,
         subcategories=subcategories,
         marketplaces=marketplaces,
-        courier_charges=courier_charges  # ✅ Pass to template
+        courier_charges=courier_charges
     )
 
 # ---------- Add Courier Charge ----------
 @app.route('/admin/add_courier_charge', methods=['POST'])
 def add_courier_charge():
-    weight = float(request.form['weight'])
+    weight = float(request.form['weight_slab'])
     charge = float(request.form['charge'])
-    db.session.add(CourierCharge(weight=weight, charge=charge))
+    db.session.add(CourierCharge(weight_slab=weight, charge=charge))
     db.session.commit()
+    flash("✅ Courier charge added successfully!", "success")
     return redirect(url_for('admin_home'))
 
 # ---------- Delete Courier Charge ----------
@@ -45,7 +46,35 @@ def delete_courier_charge(charge_id):
     if charge:
         db.session.delete(charge)
         db.session.commit()
+        flash("🗑️ Courier charge deleted.", "success")
     return redirect(url_for('admin_home'))
+
+# ---------- Insert Standard Courier Charges ----------
+@app.route('/admin/insert_standard_charges')
+def insert_standard_charges():
+    # Standard STEP Level courier rates (Amazon-based)
+    slabs = [
+        (0.5, 63),                           # First 500g
+        (1, 83),                             # 500g – 1kg
+        (2, 120),                            # 1kg – 2kg
+        (3, 120 + 34),                       # 2kg – 3kg
+        (4, 120 + 34*2),                     # 2kg – 4kg
+        (5, 120 + 34*3),                     # 2kg – 5kg
+        (6, 120 + 34*3 + 18),                # After 5kg: +₹18/kg
+        (7, 120 + 34*3 + 18*2),
+        (8, 120 + 34*3 + 18*3),
+    ]
+
+    added = 0
+    for weight, charge in slabs:
+        if not CourierCharge.query.filter_by(weight_slab=weight).first():
+            db.session.add(CourierCharge(weight_slab=weight, charge=charge))
+            added += 1
+
+    db.session.commit()
+    flash(f"✅ {added} standard courier charges inserted successfully!", "success")
+    return redirect(url_for('admin_home'))
+
 
 # ---------- Add Commission Rule ----------
 @app.route('/admin/add_rule', methods=['POST'])
@@ -67,6 +96,7 @@ def add_rule():
     )
     db.session.add(rule)
     db.session.commit()
+    flash("✅ Commission rule added!", "success")
     return redirect(url_for('admin_home'))
 
 # ---------- Edit Commission Rule ----------
@@ -84,8 +114,8 @@ def edit_rule(rule_id):
         rule.min_price = float(request.form['min_price'])
         rule.max_price = float(request.form['max_price'])
         rule.commission_percent = float(request.form['commission_percent'])
-
         db.session.commit()
+        flash("✏️ Rule updated!", "success")
         return redirect(url_for('admin_home'))
 
     return render_template('edit_rule.html', rule=rule, categories=categories, subcategories=subcategories, marketplaces=marketplaces)
@@ -97,6 +127,7 @@ def delete_rule(rule_id):
     if rule:
         db.session.delete(rule)
         db.session.commit()
+        flash("🗑️ Commission rule deleted.", "success")
     return redirect(url_for('admin_home'))
 
 # ---------- Add Category ----------
@@ -105,14 +136,7 @@ def add_category():
     name = request.form['category_name']
     db.session.add(Category(name=name))
     db.session.commit()
-    return redirect(url_for('admin_home'))
-
-# ---------- Edit Category ----------
-@app.route('/admin/edit_category/<int:category_id>', methods=['POST'])
-def edit_category(category_id):
-    category = Category.query.get_or_404(category_id)
-    category.name = request.form['edit_category_name']
-    db.session.commit()
+    flash("✅ Category added!", "success")
     return redirect(url_for('admin_home'))
 
 # ---------- Delete Category ----------
@@ -122,6 +146,7 @@ def delete_category(category_id):
     if category:
         db.session.delete(category)
         db.session.commit()
+        flash("🗑️ Category deleted!", "success")
     return redirect(url_for('admin_home'))
 
 # ---------- Add SubCategory ----------
@@ -131,15 +156,7 @@ def add_subcategory():
     category_id = request.form['subcategory_category']
     db.session.add(SubCategory(name=name, category_id=category_id))
     db.session.commit()
-    return redirect(url_for('admin_home'))
-
-# ---------- Edit SubCategory ----------
-@app.route('/admin/edit_subcategory/<int:subcategory_id>', methods=['POST'])
-def edit_subcategory(subcategory_id):
-    sub = SubCategory.query.get_or_404(subcategory_id)
-    sub.name = request.form['edit_subcategory_name']
-    sub.category_id = request.form['edit_subcategory_category']
-    db.session.commit()
+    flash("✅ Subcategory added!", "success")
     return redirect(url_for('admin_home'))
 
 # ---------- Delete SubCategory ----------
@@ -149,6 +166,7 @@ def delete_subcategory(subcategory_id):
     if sub:
         db.session.delete(sub)
         db.session.commit()
+        flash("🗑️ Subcategory deleted!", "success")
     return redirect(url_for('admin_home'))
 
 # ---------- Add Marketplace ----------
@@ -157,14 +175,7 @@ def add_marketplace():
     name = request.form['marketplace_name']
     db.session.add(Marketplace(name=name))
     db.session.commit()
-    return redirect(url_for('admin_home'))
-
-# ---------- Edit Marketplace ----------
-@app.route('/admin/edit_marketplace/<int:marketplace_id>', methods=['POST'])
-def edit_marketplace(marketplace_id):
-    mp = Marketplace.query.get_or_404(marketplace_id)
-    mp.name = request.form['edit_marketplace_name']
-    db.session.commit()
+    flash("✅ Marketplace added!", "success")
     return redirect(url_for('admin_home'))
 
 # ---------- Delete Marketplace ----------
@@ -174,14 +185,21 @@ def delete_marketplace(marketplace_id):
     if mp:
         db.session.delete(mp)
         db.session.commit()
+        flash("🗑️ Marketplace deleted!", "success")
     return redirect(url_for('admin_home'))
 
-# ---------- Filter SubCategories by Category (for JS) ----------
+# ---------- Filter SubCategories by Category ----------
 @app.route('/admin/subcategories/<int:category_id>')
 def get_subcategories(category_id):
     subcategories = SubCategory.query.filter_by(category_id=category_id).all()
     sub_list = [{'id': sub.id, 'name': sub.name} for sub in subcategories]
     return jsonify(sub_list)
+
+# ----- One-time DB creation -----
+with app.app_context():
+    if not os.path.exists(db_path):
+        db.create_all()
+        print("✅ New database created at", db_path)
 
 # ---------- Run App ----------
 if __name__ == '__main__':

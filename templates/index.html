@@ -1,160 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>E-commerce Sales Net Revenue Calculator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f7fa;
-      margin: 0;
-      padding: 0;
+      background-color: #f4f6f9;
+      padding-top: 30px;
     }
-    .container {
-      max-width: 700px;
-      margin: 40px auto;
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h2 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 30px;
-    }
-    label {
-      font-weight: 500;
-      display: block;
-      margin-top: 15px;
-      margin-bottom: 5px;
-    }
-    input, select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    button {
-      background-color: #007bff;
-      color: white;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-      width: 100%;
-      margin-top: 25px;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    .results {
-      margin-top: 30px;
-      background: #f9f9f9;
-      padding: 20px;
-      border-radius: 10px;
-    }
-    .results h3 {
-      margin-top: 0;
-      color: #444;
-      text-align: center;
-    }
-    .result-line {
-      display: flex;
-      justify-content: space-between;
-      margin: 5px 0;
-      font-size: 15px;
-    }
-    .result-line strong {
-      color: #222;
+    .card {
+      border-radius: 1rem;
+      box-shadow: 0 0 15px rgba(0,0,0,0.05);
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>E-commerce Sales Net Revenue Calculator</h2>
-
+<div class="container">
+  <div class="card p-4">
+    <h2 class="mb-4">E-commerce Sales Net Revenue Calculator</h2>
     <form action="/calculate" method="POST">
-      <label>MRP:</label>
-      <input type="number" name="mrp" required>
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label>MRP (₹):</label>
+          <input type="number" name="mrp" step="0.01" class="form-control" required>
+        </div>
+        <div class="col-md-4">
+          <label>Discount (%):</label>
+          <input type="number" name="discount" step="0.01" class="form-control" required>
+        </div>
+        <div class="col-md-4">
+          <label>Cost Price (₹):</label>
+          <input type="number" name="cost" step="0.01" class="form-control" required>
+        </div>
+      </div>
 
-      <label>Discount (%):</label>
-      <input type="number" name="discount" required>
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <label>Actual Weight (kg):</label>
+          <input type="number" name="weight" step="0.01" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+          <label>Volumetric Weight (optional)(kg):</label>
+          <input type="number" name="volumetric_weight" step="0.01" class="form-control">
+        </div>
+        
 
-      <label>Cost Price:</label>
-      <input type="number" name="cost" required>
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label>Category:</label>
+          <select name="category" class="form-select" onchange="loadSubcategories(this.value)" required>
+            {% for cat in categories %}
+              <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label>Subcategory:</label>
+          <select name="subcategory" id="subcategorySelect" class="form-select" required disabled>
+            <option disabled selected>Select a subcategory</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label>Marketplace:</label>
+          <select name="marketplace" class="form-select" required>
+            {% for mp in marketplaces %}
+              <option value="{{ mp.id }}">{{ mp.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
 
-      <label>Actual Weight (kg):</label>
-      <input type="number" name="weight" step="0.01" required>
-
-      <label>Volumetric Weight (kg):</label>
-      <input type="number" name="volumetric_weight" step="0.01">
-
-      <label>Category:</label>
-      <select name="category" id="categorySelect" required onchange="loadSubcategories(this.value)">
-        {% for cat in categories %}
-        <option value="{{ cat.id }}">{{ cat.name }}</option>
-        {% endfor %}
-      </select>
-
-      <label>Subcategory:</label>
-      <select name="subcategory" id="subcategorySelect" required>
-        {% for sub in subcategories %}
-          {% if sub.category_id == categories[0].id %}
-          <option value="{{ sub.id }}">{{ sub.name }}</option>
-          {% endif %}
-        {% endfor %}
-      </select>
-
-      <label>Marketplace:</label>
-      <select name="marketplace" required>
-        {% for mp in marketplaces %}
-        <option value="{{ mp.id }}">{{ mp.name }}</option>
-        {% endfor %}
-      </select>
-
-      <button type="submit">Calculate</button>
+      <div class="d-grid">
+        <button class="btn btn-primary">Calculate</button>
+      </div>
     </form>
 
     {% if result %}
-    <div class="results">
-      <h3>Calculation Summary</h3>
-      <div class="result-line"><span>MRP:</span> <strong>₹{{ result.mrp }}</strong></div>
-      <div class="result-line"><span>Discount:</span> <strong>{{ result.discount }}%</strong></div>
-      <div class="result-line"><span>Selling Price:</span> <strong>₹{{ result.selling_price }}</strong></div>
-      <div class="result-line"><span>Commission:</span> <strong>₹{{ result.commission }}</strong></div>
-      <div class="result-line"><span>Commission GST:</span> <strong>₹{{ result.commission_gst }}</strong></div>
-      <div class="result-line"><span>Fixed Fee:</span> <strong>₹{{ result.fixed_fee }}</strong></div>
-      <div class="result-line"><span>Fixed Fee GST:</span> <strong>₹{{ result.fixed_fee_gst }}</strong></div>
-      <div class="result-line"><span>Shipping Weight:</span> <strong>{{ result.shipping_weight }} kg</strong></div>
-      <div class="result-line"><span>Shipping Charge:</span> <strong>₹{{ result.shipping_charge }}</strong></div>
-      <div class="result-line"><span>Courier GST:</span> <strong>₹{{ result.courier_gst }}</strong></div>
-      <div class="result-line"><span>Total Deductions:</span> <strong>₹{{ result.total_deductions }}</strong></div>
-      <div class="result-line"><span>Receivable:</span> <strong>₹{{ result.receivable }}</strong></div>
-      <div class="result-line"><span>Profit:</span> <strong>₹{{ result.profit }}</strong></div>
-    </div>
-    {% endif %}
-  </div>
+<hr>
+<h4 class="text-center fw-bold mb-3">Calculation Summary</h4>
+<div class="p-3 bg-white rounded shadow-sm" style="max-width: 500px; margin: auto;">
+  <div class="row">
+    <div class="col-6">MRP:</div>
+    <div class="col-6 text-end">₹{{ result.mrp }}</div>
 
-  <!-- JS for dynamic subcategory filter -->
-  <script>
-    function loadSubcategories(categoryId) {
-      fetch('/admin/subcategories/' + categoryId)
-        .then(res => res.json())
-        .then(data => {
-          const subSelect = document.getElementById('subcategorySelect');
-          subSelect.innerHTML = '';
-          data.forEach(sub => {
-            const opt = document.createElement('option');
-            opt.value = sub.id;
-            opt.textContent = sub.name;
-            subSelect.appendChild(opt);
-          });
+    <div class="col-6">Discount:</div>
+    <div class="col-6 text-end">{{ result.discount }}%</div>
+
+    <div class="col-6">Selling Price:</div>
+    <div class="col-6 text-end">₹{{ result.selling_price }}</div>
+
+    <div class="col-6">Commission:</div>
+    <div class="col-6 text-end">₹{{ result.commission }}</div>
+
+    <div class="col-6">Commission GST:</div>
+    <div class="col-6 text-end">₹{{ result.commission_gst }}</div>
+
+    <div class="col-6">Fixed Fee:</div>
+    <div class="col-6 text-end">₹{{ result.fixed_fee }}</div>
+
+    <div class="col-6">Fixed Fee GST:</div>
+    <div class="col-6 text-end">₹{{ result.fixed_fee_gst }}</div>
+
+    <div class="col-6">Shipping Weight:</div>
+    <div class="col-6 text-end">{{ result.shipping_weight }} kg</div>
+
+    <div class="col-6">Shipping Charge:</div>
+    <div class="col-6 text-end">₹{{ result.shipping_charge }}</div>
+
+    <div class="col-6">Courier GST:</div>
+    <div class="col-6 text-end">₹{{ result.courier_gst }}</div>
+
+    <div class="col-6 fw-bold">Total Deductions:</div>
+    <div class="col-6 fw-bold text-end">₹{{ result.total_deductions }}</div>
+
+    <div class="col-6 fw-bold">Receivable:</div>
+    <div class="col-6 fw-bold text-end">₹{{ result.receivable }}</div>
+
+    <div class="col-6 fw-bold text-success">Profit:</div>
+    <div class="col-6 fw-bold text-success text-end">₹{{ result.profit }}</div>
+  </div>
+</div>
+{% endif %}
+
+  </div>
+</div>
+
+<!-- JS for dynamic subcategory filter -->
+<script>
+  function loadSubcategories(categoryId) {
+    fetch('/admin/subcategories/' + categoryId)
+      .then(res => res.json())
+      .then(data => {
+        const subSelect = document.getElementById('subcategorySelect');
+        subSelect.innerHTML = '<option disabled selected>Select a subcategory</option>';
+        data.forEach(sub => {
+          const opt = document.createElement('option');
+          opt.value = sub.id;
+          opt.textContent = sub.name;
+          subSelect.appendChild(opt);
         });
-    }
-  </script>
+        subSelect.disabled = false;
+      });
+  }
+</script>
 </body>
 </html>
